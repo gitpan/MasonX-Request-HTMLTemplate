@@ -2,6 +2,7 @@ Changes
 Makefile.PL
 MANIFEST
 README
+LICENSE
 HTMLTemplate.pm
 HTMLTemplate.pod
 HTMLTemplate/WithApacheSession.pm

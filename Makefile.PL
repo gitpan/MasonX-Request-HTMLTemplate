@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     'NAME'		=> 'MasonX::Request::HTMLTemplate',
-    'VERSION_FROM'	=> 'HTMLTemplate.pm', # finds $VERSION
+    'VERSION'	=> '0.04', 
     'PREREQ_PM'		=> {	
 							'HTML::Mason' => 1.16,
    							'HTML::Template::Extension' => 0.23,

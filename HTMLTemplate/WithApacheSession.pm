@@ -5,7 +5,7 @@ use MasonX::Request::HTMLTemplate;
 use Data::Dumper;
 use base qw(MasonX::Request::HTMLTemplate MasonX::Request::WithApacheSession);
 
-$MasonX::Request::HTMLTemplate::WithApacheSession::VERSION	= '0.03';
+$MasonX::Request::HTMLTemplate::WithApacheSession::VERSION	= '0.04';
 
 
 sub _alter_superclass() { 
@@ -27,11 +27,12 @@ sub items {
 	if ($self->can('session')) {
 		# Running under MasonX::Request::WithApacheSession
 		if (defined $self->session) {
-			my $session = $self->session;
+			# clone hashref by val
+			my $session = { %{$self->session} };
 			# remove hidden MasonX::Request::WithApacheSession variables
 			delete $$session{'___force_a_write___'};
 			delete $$session{'_session_id'};
-			&_convStructToHash($self->session,\$sessionStruct,'');
+			&_convStructToHash($session,\$sessionStruct,'');
 		}
 	}
 	return $self->SUPER::items($sessionStruct);

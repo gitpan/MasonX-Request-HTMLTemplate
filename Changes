@@ -1,5 +1,10 @@
 Revision history for Perl extension MasonX::Request::HTMLTemplate
 
+00.04  (2003-08-04)
+===================
+- Fix a bug in WithApacheSession that cause problems when using session.
+- Add LICENSE to distribution.
+
 00.03  (2003-08-02)
 ===================
 - Added many examples in documentation. Moreover it has been fixed in some 
