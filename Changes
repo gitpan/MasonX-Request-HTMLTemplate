@@ -1,5 +1,9 @@
 Revision history for Perl extension MasonX::Request::HTMLTemplate
 
+00.05  (2003-09-07)
+===================
+- Add method template_arg to HTMLTemplate.pm to read a template arg
+  previously added with add_template_args method.
 00.04  (2003-08-04)
 ===================
 - Fix a bug in WithApacheSession that cause problems when using session.

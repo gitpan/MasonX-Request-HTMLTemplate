@@ -108,6 +108,20 @@ sub make_tests() {
 								Io amo MASON!
 							EOF
 					);
+	$group->add_test(
+							name 			=> 'template_arg.mpl',
+							description 	=> 'testing template_arg method',
+							interp_params 	=> \%params,
+							component 		=> <<'							EOF',
+								<%init>
+									$m->add_template_args( 'myscript' => 'I love MASON!' );
+									print "\t\t\t\t\t\t\t\t" . $m->template_arg('myscript');
+								</%init>
+							EOF
+							expect 			=><<'							EOF',
+								I love MASON!
+							EOF
+					);
 
 
 

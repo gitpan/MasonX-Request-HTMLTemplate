@@ -8,7 +8,7 @@ use HTML::Template::Extension;
 use File::Spec;
 use Params::Validate qw(:all);
 
-$MasonX::Request::HTMLTemplate::VERSION	= '0.03';
+$MasonX::Request::HTMLTemplate::VERSION	= '0.05';
 
 #@ISA = qw(HTML::Mason::Request HTML::Template::Extension);
 use base qw(HTML::Mason::Request HTML::Template::Extension);
@@ -163,6 +163,12 @@ sub add_template_args() {
 	my %args		= @_;
 	$self->{args}	= {%{$self->{args}}, %args };
 	return @_;
+}
+
+sub template_arg() {
+	my $self		= shift;
+	my $key			= shift;
+	return $self->{args}->{$key};
 }
 
 sub absolute_path {

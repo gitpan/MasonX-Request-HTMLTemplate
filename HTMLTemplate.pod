@@ -463,6 +463,11 @@ plugins).
 This method print the output in the template present in the same path as the camponent
 called but with an extention file "htt".
 
+=item C<template_arg ( template_param_name )>
+
+Return the value of the selected template parameter previously added with 
+C<add_template_args> method.
+
 =back
 
 =head2 PUBLIC VARIABLES
