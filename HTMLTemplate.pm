@@ -2,23 +2,15 @@ package MasonX::Request::HTMLTemplate;
 
 use vars qw(@ISA);
 
+use HTML::Mason;
+use HTML::Mason::Request;
 use HTML::Template::Extension;
 use File::Spec;
 use Params::Validate qw(:all);
 
-$MasonX::Request::HTMLTemplate::VERSION	= '0.01';
+$MasonX::Request::HTMLTemplate::VERSION	= '0.02';
 
-@ISA = qw(HTML::Template::Extension);
-
-# the subclass used to initialized Masonx::Request
-my $subclass = "MasonX::Request::WithApacheSession";
-
-eval { 	
-	my $modname = $subclass;
-	$modname =~s/::/\//g;	
-	require "$modname.pm"; 
-};
-if (!$@) { push @ISA, $subclass};
+@ISA = qw(HTML::Mason::Request HTML::Template::Extension);
 
 # definition of localizated error string for unexistent template
 my $err_tmpl_notfound_string = {
@@ -49,14 +41,18 @@ my $err_tmpl_notfound_string = {
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
 __PACKAGE__->valid_params(
-					template_base_path => { 
+					template_base_path 	=> { 
 											parse =>'string',
-											type => Params::Validate::SCALAR
+											type => Params::Validate::SCALAR,
+											optional => 1,
+											default => 'undef',
 										},
-					default_language => { 
+					default_language 	=> { 
 											parse =>'string',
-											type => Params::Validate::SCALAR
-										},
+											type => Params::Validate::SCALAR,
+											optional => 1,
+											default => 'en',
+										}
 						);
 
 my %fields =
@@ -71,21 +67,24 @@ my %fields =
 sub new {
 	my $class = shift;
 	my $htmpl = $class->HTML::Template::Extension::new(%fields);
-	my $mason = &{"${subclass}::new"}($class,@_);
+	# $MasonX::Request::WithApacheSession::VERSION ?
+    #       'MasonX::Request::WithApacheSession' :
+	$class->alter_superclass( 
+								$MasonX::Request::WithApacheSession::VERSION ?
+                               'MasonX::Request::WithApacheSession' :
+								$HTML::Mason::ApacheHandler::VERSION ?
+                                       'HTML::Mason::Request::ApacheHandler' :
+                                       $HTML::Mason::CGIHandler::VERSION ?
+                                       'HTML::Mason::Request::CGI' :
+                                       'HTML::Mason::Request' );
+	my $mason = $class->SUPER::new(@_);
 	$self = {%{$mason},%{$htmpl}};
-	$class->alter_superclass( ${"${subclass}::VERSION"} ?
-			$subclass :
-			$HTML::Mason::ApacheHandler::VERSION ?
-                        'HTML::Mason::Request::ApacheHandler' :
-                        $HTML::Mason::CGIHandler::VERSION ?
-                        'HTML::Mason::Request::CGI' :
-                        'HTML::Mason::Request' );
     bless $self, $class;
     while (my ($key,$value) = each(%options)) {
         if (exists($fields{$key})) {
             $self->{$key} = $value if ($key ne 'file');
         } else {
-            die "SECURE::Template::new: invalid option '$key'\n";
+            die ref($self) . "::new: invalid option '$key'\n";
         }
     }
     $self->filename($options{file}) if (exists($options{file}));

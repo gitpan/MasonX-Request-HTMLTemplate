@@ -1,5 +1,19 @@
 Revision history for Perl extension MasonX::Request::HTMLTemplate
 
+00.02  (2003-07-31)
+===================
+- Add more examples and synopsis to pod files.
+
+- MasonX::Request::HTMLTemplate now inherits only HTML::Mason::ApacheHandler,
+  HTML::Mason::Request, HTML::Mason::CGIHandler. To use sessions and 
+  have an object that inherits from MasonX::Request::WithApacheSession
+  use the new module MasonX::Request::HTMLTemplate::WithApacheSession.
+
+- template_base_path and default_language object initialize parameters
+  are now optional. The default value for the first one is 'undef' that is
+  template_base_path it coincides with Mason component root directory.
+  The defaulkt value for the other is 'en'.
+
 00.01  (2003-07-30)
 ===================
 - original version

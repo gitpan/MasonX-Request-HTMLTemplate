@@ -1,0 +1,39 @@
+=head1 NAME
+
+MasonX::Request::HTMLTemplate::WithApacheSession - Add templates to the Mason Request object witn session support
+
+=head1 SYNOPSIS
+
+  No synopsis till now
+
+=head1 DESCRIPTION
+
+=head2 CONSTRUCTORS
+
+To DO.
+
+=head2 PUBLIC METHODS
+
+=head2 PUBLIC VARIABLES
+
+=head1 DIAGNOSTICS
+
+=head1 EXPORT
+
+=head1 REQUIRES 
+
+HTML::Mason, HTML::Template::Extension, 
+MasonX::Request::WithApacheSession, Params::Validate, File::Spec
+
+=head1 AUTHOR
+
+Emiliano Bruni, E<lt>info@ebruni.itE<gt>
+
+=head1 SEE ALSO
+
+L<MasonX::Request::HTMLTemplate>, L<HTML::Template::Extension>, L<HTML::Template>, L<MasonX::Request::WithApacheSession>
+
+To see some web sites that use this package take a look to http://www.micso.fr 
+and http://www.micso.com
+
+=cut

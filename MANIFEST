@@ -4,4 +4,6 @@ MANIFEST
 README
 HTMLTemplate.pm
 HTMLTemplate.pod
+HTMLTemplate/WithApacheSession.pm
+HTMLTemplate/WithApacheSession.pod
 test.pl
