@@ -4,26 +4,115 @@ MasonX::Request::HTMLTemplate::WithApacheSession - Add templates to the Mason Re
 
 =head1 SYNOPSIS
 
-  No synopsis till now
+  In your httpd.conf file:
+
+    PerlSetVar  MasonRequestClass      MasonX::Request::HTMLTemplate::WithApacheSession
+    # and optionally
+    PerlSetVar  MasonDefaultLanguage   en
+    PerlSetVar  MasonTemplateBaseDir   undef
+    # add here all PerlSetVar needed 
+    # by MasonX::Request::WithApacheSession
+    # (see its manual page). As an example
+    # PerlSetVar  MasonSessionCookieDomain  .example.com
+    # PerlSetVar  MasonSessionClass         Apache::Session::MySQL
+    # PerlSetVar  MasonSessionDataSource    dbi:mysql:somedb
+
+  now you can set a session variable in a component
+
+    % $m->session->{myscript} = 'MASON';
+
+  and use it in a template read_session.htt
+
+    <HTML><HEAD></HEAD><BODY>
+      I love %myscript%
+    </BODY></HTML>
+
+  called from a component read_session.mpl
+
+	% $m->print_template;
+	
+  You can moreover set your prefered language in a component 
+  like http://.../set_lang.mpl?lang=xx
+
+	% $m->session->{lang} = $ARGS{lang}
+
+  and every template you call later, system will try to 
+  use ******.xx.htt if exists, as template file. Of course, if 
+  this file doesn't exist, standard ******.htt will be used.
 
 =head1 DESCRIPTION
 
-=head2 CONSTRUCTORS
+This module add session to MasonX::Request::HTMLTemplate so you can use session variable in
+your pages. Moreover session will be passed to templates and could be use inside them.
 
-To DO.
+You can use a complex structure in session variable like reference to hash and use it as
+template variables.
+
+If you define an a hash ref in a session variable like:
+
+  $m->session->{complex} = {
+                             key1 => value1,
+                             key2 => value2,
+                             key3 => {
+                                       skey1 => svalue1,
+                                       skey2 => svalue2,
+                                       .......
+                             .......
+
+you can get this values in template using template variables as
+
+  %complex_key1%             that it will be relaced from "value1"
+  %complex_key2%             that it will be relaced from "value2"
+  %complex_key3_skey1%       that it will be relaced from "svalue1"
+  %complex_key3_skey2%       that it will be relaced from "svalue2"
+
+and so on.
+
+=head2 USAGE
+
+=head2 ACTIVATION
+
+To use this module you need to tell Mason to use this
+class for requests.  This can be done in one of two ways.
+If you are configuring Mason via your httpd.conf file,
+simply add this:
+
+  PerlSetVar  MasonRequestClass  MasonX::Request::HTMLTemplate::WithApacheSession
+
+If you are using a handler.pl file, simply add this parameter
+to the parameters given to the ApacheHandler constructor:
+
+  request_class => 'MasonX::Request::HTMLTemplate::WithApacheSession'
+
+=head2 CONFIGURATION
+
+All inherit from L<MasonX::Request::HTMLTemplate|MasonX::Request::HTMLTemplate>
 
 =head2 PUBLIC METHODS
 
+All inherit from L<MasonX::Request::HTMLTemplate|MasonX::Request::HTMLTemplate>
+
 =head2 PUBLIC VARIABLES
+
+All inherit from L<MasonX::Request::HTMLTemplate|MasonX::Request::HTMLTemplate>
 
 =head1 DIAGNOSTICS
 
+All inherit from L<MasonX::Request::HTMLTemplate|MasonX::Request::HTMLTemplate>
+
 =head1 EXPORT
+
+All inherit from L<MasonX::Request::HTMLTemplate|MasonX::Request::HTMLTemplate>
 
 =head1 REQUIRES 
 
-HTML::Mason, HTML::Template::Extension, 
-MasonX::Request::WithApacheSession, Params::Validate, File::Spec
+MasonX::Request::WithApacheSession
+
+=head1 SUPPORT
+
+Contact directly the author or submit a bug to
+
+http://search.cpan.org/.....
 
 =head1 AUTHOR
 
@@ -31,9 +120,9 @@ Emiliano Bruni, E<lt>info@ebruni.itE<gt>
 
 =head1 SEE ALSO
 
-L<MasonX::Request::HTMLTemplate>, L<HTML::Template::Extension>, L<HTML::Template>, L<MasonX::Request::WithApacheSession>
+L<MasonX::Request::HTMLTemplate>, L<MasonX::Request::WithApacheSession>
 
-To see some web sites that use this package take a look to http://www.micso.fr 
-and http://www.micso.com
+To see some web sites that use this package take a look to http://www.micso.fr/
+and http://www.micso.com/Z<>.
 
 =cut

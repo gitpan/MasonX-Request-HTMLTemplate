@@ -1,16 +1,17 @@
 package MasonX::Request::HTMLTemplate;
 
-use vars qw(@ISA);
+#use vars qw(@ISA);
 
-use HTML::Mason;
+use HTML::Mason 1.16;
 use HTML::Mason::Request;
 use HTML::Template::Extension;
 use File::Spec;
 use Params::Validate qw(:all);
 
-$MasonX::Request::HTMLTemplate::VERSION	= '0.02';
+$MasonX::Request::HTMLTemplate::VERSION	= '0.03';
 
-@ISA = qw(HTML::Mason::Request HTML::Template::Extension);
+#@ISA = qw(HTML::Mason::Request HTML::Template::Extension);
+use base qw(HTML::Mason::Request HTML::Template::Extension);
 
 # definition of localizated error string for unexistent template
 my $err_tmpl_notfound_string = {
@@ -64,19 +65,11 @@ my %fields =
      absolute_path      => 0,
      );
 
+
 sub new {
 	my $class = shift;
 	my $htmpl = $class->HTML::Template::Extension::new(%fields);
-	# $MasonX::Request::WithApacheSession::VERSION ?
-    #       'MasonX::Request::WithApacheSession' :
-	$class->alter_superclass( 
-								$MasonX::Request::WithApacheSession::VERSION ?
-                               'MasonX::Request::WithApacheSession' :
-								$HTML::Mason::ApacheHandler::VERSION ?
-                                       'HTML::Mason::Request::ApacheHandler' :
-                                       $HTML::Mason::CGIHandler::VERSION ?
-                                       'HTML::Mason::Request::CGI' :
-                                       'HTML::Mason::Request' );
+	$class->alter_superclass( &{"${class}::_alter_superclass"} );
 	my $mason = $class->SUPER::new(@_);
 	$self = {%{$mason},%{$htmpl}};
     bless $self, $class;
@@ -93,55 +86,39 @@ sub new {
 
 sub print_template {
 	my $self 			= shift;
-	my $c_args			= shift;
+	my $c_args			= shift || {};
 	my $tmpl_file_path  = shift || $self->callers(0)->name;
 	$tmpl_file_path		= $self->_convFileName($tmpl_file_path);
-	my $html_args		= $self->items;
-	# those via POST/GET
-	while (my($key,$value) = each(%{$c_args})) {
-		$html_args->{$key} = $value;
-	}
+	# merging $c_args and items
+	my $html_args 		= { %{$self->items}, %{$c_args} };
 	my $html			= $self->html($html_args,$tmpl_file_path);
-	if (defined $html) {
-		$self->print($html);
-	}
+	$self->print($html) if (defined $html);
 }
 sub items {
 	# return a reference to an hash with union of %ARGS, $self->{args},
 	# the traslaslation of session variable using _convStructToHash and,
 	# for each elements of this hash, items in the form "key=value" => 1
-	my $self = shift;
-	my $ret = $self->request_args;
-	if (defined $self->{args}) {
-		while ( my($key,$value) = each(%{$self->{args}}) ) {
-			$ret->{$key}	= $value;
-		}
-	}
-	if (defined $self->session) {
-		my $sessionStruct;
-		&_convStructToHash($self->session,\$sessionStruct,'');
-		while (my($key,$value) = each(%{$sessionStruct})) {
-			$ret->{$key} = $value;
-		}
-	}
+	my $self 		= shift;
+	my $more_args 	= shift || {};
+
+	my %self_args	= $self->{args} ? %{$self->{args}} : {};
+	# merging client args + add_template_args + more_args (from WithApacheSession)
+	$ret = {%{$more_args} , %{$self->request_args} , %self_args};
+
 	# add key=value => 1 to be used with TMPL_IF or with
 	# HTML::Template::Extension::IF_TERM
-	my $ret1 ;
-  while (my($key,$value) = each(%{$ret})) {
-    $ret1->{$key} = $value;
-		if (substr($key,0,1) ne '_') {
+	my @keys = keys %$ret;
+	foreach $key (@keys) {
+		my $value = $ret->{$key};
 	  	if (ref($value) eq 'ARRAY') {
-	     	 # is an array. Traslate and add all elements in form key=value => 1
-	     	 foreach (@{$value}) {
-	     	     $ret1->{"$key=$_"} = 1;
-	     	 }
-	  	} else {
-	     	 # scalar...ok...single element.
-	     	 $ret1->{"$key=$value"} = 1;
+	   		# is an array. Traslate and add all elements in form key=value => 1
+	   		foreach (@{$value}) { $ret->{"$key=$_"} = 1; }
+		} else {
+	   		# scalar...ok...single element.
+	   		$ret->{"$key=$value"} = 1;
 	  	}
-		}
 	}
-	return $ret1;
+	return $ret;
 }
 sub filename {
   my $self = shift;
@@ -193,25 +170,14 @@ sub absolute_path {
 	my $s=shift; return @_ ? ($s->{absolute_path}=shift) : $s->{absolute_path};
 }
 
-sub _convStructToHash {
-  # convert a struct
-  # { keya = {
-  #               keyb => {
-  #                   keyc => value, ...
-  # in
-  # { keya_keyb_keyc => value
-  my $hashOrig        = shift;
-  my $hashDest        = shift;
-  my $parentKey       = shift;
-  while (my($key,$value) = each(%{$hashOrig})) {
-    my $gkey = $parentKey eq '' ? $key :  $parentKey . '_' . $key ;
-    #print $gkey . " " . (Data::Dumper::Dumper($value));
-    if (ref($value) eq "HASH") {
-			&_convStructToHash($value,$hashDest,$gkey);
-    } else {
-			$$hashDest->{$gkey} = $value;
-    }
-  }
+sub _alter_superclass() {
+	#return 	$MasonX::Request::WithApacheSession::VERSION 
+    #      		? 'MasonX::Request::WithApacheSession' 
+	return			$HTML::Mason::ApacheHandler::VERSION 
+               		? 'HTML::Mason::Request::ApacheHandler' 
+                    : $HTML::Mason::CGIHandler::VERSION 
+                   		? 'HTML::Mason::Request::CGI' 
+                   		: 'HTML::Mason::Request';
 }
 
 sub _tmplFilePath {
@@ -244,7 +210,7 @@ sub _tmplLang {
 	# try to see if exists file for language selected
 	my $self			= shift;
 	my $abs_path		= shift;
-	my ($volume,$dirs,$file) = File::Spec->splitpath( $abspath ); 
+	my ($volume,$dirs,$file) = File::Spec->splitpath( $abs_path ); 
 	my ($fn,$ext) 		= split(/\./,$file);
 	my $file_lang		= $fn . '.' . $self->{default_language} . '.' . $ext;
 	my $path_lang		= File::Spec->catpath($volume,$dirs,$file_lang);

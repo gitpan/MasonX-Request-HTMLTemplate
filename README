@@ -16,7 +16,6 @@ DEPENDENCIES
 This module requires these other modules and libraries:
 
    HTML::Mason
-   MasonX::Request::WithApacheSession
    HTML::Template::Extension
    Params::Validate
    File::Spec

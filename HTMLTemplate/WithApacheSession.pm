@@ -1,23 +1,62 @@
 package MasonX::Request::HTMLTemplate::WithApacheSession;
 
-use vars qw(@ISA);
-
+use MasonX::Request::WithApacheSession;
 use MasonX::Request::HTMLTemplate;
+use Data::Dumper;
+use base qw(MasonX::Request::HTMLTemplate MasonX::Request::WithApacheSession);
 
-$MasonX::Request::HTMLTemplate::WithApacheSession::VERSION	= '0.02';
+$MasonX::Request::HTMLTemplate::WithApacheSession::VERSION	= '0.03';
 
-# the subclass used to initialized Masonx::Request
-my $subclass = "MasonX::Request::WithApacheSession";
 
-eval { 	
-	my $modname = $subclass;
-	$modname =~s/::/\//g;	
-	require "$modname.pm"; 
-};
-if ($@) { die "Unable to find MasonX::Request::WithApacheSession" };
+sub _alter_superclass() { 
+	# overload static parent method
+    return     $MasonX::Request::WithApacheSession::VERSION 
+               ? 'MasonX::Request::WithApacheSession' 
+               :   $HTML::Mason::ApacheHandler::VERSION
+                    ? 'HTML::Mason::Request::ApacheHandler'
+                    : $HTML::Mason::CGIHandler::VERSION 
+                        ? 'HTML::Mason::Request::CGI'
+                        : 'HTML::Mason::Request';
+}
 
-@ISA = ('MasonX::Request::HTMLTemplate',$subclass);
+sub items {
+	# overload parent method to add session variables
+	my $self 		= shift;
+	my $ret		= {};
+	my $sessionStruct;
+	if ($self->can('session')) {
+		# Running under MasonX::Request::WithApacheSession
+		if (defined $self->session) {
+			my $session = $self->session;
+			# remove hidden MasonX::Request::WithApacheSession variables
+			delete $$session{'___force_a_write___'};
+			delete $$session{'_session_id'};
+			&_convStructToHash($self->session,\$sessionStruct,'');
+		}
+	}
+	return $self->SUPER::items($sessionStruct);
+}
 
-# overload new methods
+sub _convStructToHash {
+  # convert a struct
+  # { keya = {
+  #               keyb => {
+  #                   keyc => value, ...
+  # in
+  # { keya_keyb_keyc => value
+  my $hashOrig        = shift;
+  my $hashDest        = shift;
+  my $parentKey       = shift;
+  while (my($key,$value) = each(%{$hashOrig})) {
+    my $gkey = $parentKey eq '' ? $key :  $parentKey . '_' . $key ;
+    #print $gkey . " " . (Data::Dumper::Dumper($value));
+    if (ref($value) eq "HASH") {
+			&_convStructToHash($value,$hashDest,$gkey);
+    } else {
+			$$hashDest->{$gkey} = $value;
+    }
+  }
+}
+
 
 1;
