@@ -1,0 +1,288 @@
+=head1 NAME
+
+MasonX::Request::HTMLTemplate - Add templates to the Mason Request object
+
+=head1 SYNOPSIS
+
+  No synopsis till now
+
+=head1 DESCRIPTION
+
+This module tries to add two peculiar functionalities to Mason 
+
+=over 4
+
+=item *
+
+easy use of templates
+
+=item *
+
+easy building of localized web site
+
+=back
+ 
+to produce a framewark with all power of Mason but by 
+separating completely the script language from the graphical interface language.
+
+This is done by inheritance HTML::Mason::Request, HTML::Template::Extension and
+MasonX::Request::WithApacheSession in a single module and by
+adding one public method "print_template" to standard Mason syntax.
+
+In the form more simple, "print_template" prints out the html code present in a file
+in the same folder of the called component but with an "htt" extension.
+ 
+This file has opened using HTML:Template and HTML::Template::Extension.
+
+This file receives a template variable which is a merge of this objects:
+
+=over 4
+
+=item *
+
+all parameters passed from client through GET/POST ($m->request_args)
+
+=item *
+
+all parameters present in the session variable $m->session
+that is a MasonX::Request::WithApacheRequest object
+
+=item *
+
+all parameters set through add_template_args method.
+
+=item *
+
+for each parameter $key=>$value of the previous items an element of the form
+"$key=$value"=>1 (to be used with TMPL_IF and IF_TERN HTML::Template::Extension
+plugins).
+
+=back
+
+This template variable can be used inside the HTML template file using the 
+HTML::Template and HTML::Template::Extension syntax.
+
+As an example, writing a component which calls simply the method "print_template"
+
+  html_test.mpl
+  =============
+  <& $m->print_template &>
+  
+one is simply saying that content HTML of the file html_test.htt 
+is wanted to be printed.
+
+If the content HTML of the file  is
+
+  html_test.htt
+  =============
+  <HTML><HEAD></HEAD><BODY>
+    Hello: %user%
+  </BODY></HTML>
+  
+the response will be: "Hello:". 
+
+But if you call html_test.mpl with parameter "user=my_name" 
+through POST or through GET as 
+
+  http://my_web_site/html_test.mpl?user=my_name
+  
+the response will be "Hello: my_name". 
+
+In the same way, if the variable user is values within the component as:
+
+  html_test.mpl
+  =============
+  % $m->{args}->{user} = my_name
+  <& $m->print_template &>
+  
+the result will be the same one.
+
+Moreover if a variable "lang" come last to the template why defined in the 
+cookie of session, in the arguments passes to you through POST or through GET or 
+why explicitly defined in the component, then it will come tried, 
+if it exists, the file html_test.${lang}.htt like model localized 
+for the demanded language.
+
+=head1 EXAMPLES
+
+Before giving a glance  to the syntax of the module we see some uses 
+possible of this module.
+
+=head2 SIMPLE SUBSTITUTION OF VARIABLE
+
+  simple_var.mpl
+  ==============
+  <%init>
+    # comment next line and call this component as
+    # http://.../simple_var.mpl?myscript=Mason
+    # it produces the same result
+    $m->add_template_args( myscript => 'Mason');
+    $m->print_template();
+  </%init>
+
+  simple_var.htt
+  ==============
+  <HTML><HEAD></HEAD><BODY>
+    I like %myscript%!
+  </BODY></HTML>
+
+it will output
+
+  <HTML><HEAD></HEAD><BODY>
+    I like Mason!
+  </BODY></HTML>
+
+The HTML page simple_var.htt can also be wrote as:
+
+  <HTML><HEAD></HEAD><BODY>
+    I like <TMPL_VAR name="myscript">!
+  </BODY></HTML>
+
+or as:
+
+  <HTML><HEAD></HEAD><BODY>
+    I like 
+      <TMPL_VAR name="myscript">
+        here my preferred language will appear!
+	  </TMPL_VAR>
+  </BODY></HTML>
+
+because they produce the same output.
+
+=head2 PAGES IN VARIOUS LANGUAGES
+
+We suppose we have set the parameter "default_language" as "en" in handler.pm
+
+  Which_language_I_speak.htm           Which_language_I_speak.it.htm 
+  ==========================           =============================                         
+  <HTML><HEAD></HEAD><BODY>            <HTML><HEAD></HEAD><BODY>
+    I speak %lang%                       Io parlo %lang%         
+  </BODY></HTML>                       </BODY></HTML>        
+  
+  Which_language_I_speak.fr.htm        Which_language_I_speak.es.htm 
+  =============================        =============================
+  <HTML><HEAD></HEAD><BODY>            <HTML><HEAD></HEAD><BODY>
+    Je parle  %lang%                     Jo ablo %lang%         
+  </BODY></HTML>                       </BODY></HTML> 
+
+When a browser requests C<Which_language_I_speak.htm> the relative page
+in correct language if you have set the variable "lang" in one of this forms
+
+=over 4 
+
+=item *
+
+defining it explicitly in you URI request through query string or
+POST content as
+
+  http://.../Which_language_I_speak.htm?lang=[en,it,fr,es]
+
+
+=item * 
+
+if in whatever other pages  called before this you set the  session parameter
+
+  $m->session->{lang} = "en"; # or "it" or "fr" or "es"
+
+=item *
+
+if you use a mpl component instead to directly call Which_language_I_speak.htm, 
+by changing them  by substituting "htm" with "htt" and by defining the variable "lang"
+directly in the component as:
+
+  $m->add_template_args( 'lang' => "en" ); # or "it" or "fr" or "es"
+  $m->print_template;
+
+=back
+
+Of course Which_language_I_speak.htm (or .htt with the component usage) will be
+used if lang=en or lang is not set or lang is set to a value for which
+Which_language_I_speack.${lang}.htm doesn't exist.
+
+=head1 CLASS INTERFACE
+
+=head2 CONSTRUCTORS
+
+To DO.
+
+=head2 PUBLIC METHODS
+
+=over 4
+
+=item add_template_args ( item_1 => value_1,..., item_n => value_n );
+
+This method will be make that the list passed as parameter could be used in the
+template in agreement with the syntax of the HTML::Template::Extension module.
+
+=item filename ( $template_file_path )
+
+Set/get the filename path of the tamplate to be used.
+
+=item is_absolute (0|1)
+
+This method set/get a boolean value that set if the template_file_path parameter
+in the print_template and filename method is relative to the root filesystem or is relative
+to the root Mason component path.
+
+=item items
+
+Return a reference of an hash that is a merge of this objects:
+
+=over 4
+
+=item *
+
+all parameters passed from client through GET/POST ($m->request_args)
+
+=item *
+
+all parameters present in the session variable
+
+=item *
+
+all parameters set through add_template_args method.
+
+=item *
+
+for each parameter $key=>$value of the previous items an element of the form
+"$key=$value"=>1 (to be used with TMPL_IF and IF_TERN HTML::Template::Extension
+plugins).
+
+=back
+
+=item print_template ( [$args] , [$template_file_path] )
+
+This method print the output in the template present in the same path as the camponent
+called but with an extention file "htt".
+
+=back
+
+=head2 PUBLIC VARIABLES
+
+To Do.
+
+=head1 DIAGNOSTICS
+
+No diagnostics error returned.
+
+=head1 EXPORT
+
+To Do.
+
+=head1 REQUIRES 
+
+HTML::Mason, HTML::Template::Extension, 
+MasonX::Request::WithApacheSession, Params::Validate, File::Spec
+
+=head1 AUTHOR
+
+Emiliano Bruni, E<lt>info@ebruni.itE<gt>
+
+=head1 SEE ALSO
+
+L<HTML::Template::Extension>, L<HTML::Template>, L<MasonX::Request::WithApacheSession>, 
+
+To see some web sites that use this package take a look to http://www.micso.fr 
+and http://www.micso.com
+
+=cut
