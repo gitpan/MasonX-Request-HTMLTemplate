@@ -8,7 +8,7 @@ use HTML::Template::Extension;
 use File::Spec;
 use Params::Validate qw(:all);
 
-$MasonX::Request::HTMLTemplate::VERSION	= '0.05';
+$MasonX::Request::HTMLTemplate::VERSION	= '0.06';
 
 #@ISA = qw(HTML::Mason::Request HTML::Template::Extension);
 use base qw(HTML::Mason::Request HTML::Template::Extension);
@@ -190,7 +190,7 @@ sub _tmplFilePath {
 	# convert the file path based on absolute/relative path
 	# and to base_dir and language
 	my $self			= shift;
-	my $comp_name		= shift || $self->callers(0)->name;
+	my $comp_name		= shift || $self->current_comp->name;
 	my $abs_path;
 	if ($self->absolute_path) {
 		# client request that the param it set is absolute...
@@ -198,7 +198,7 @@ sub _tmplFilePath {
 		$abs_path = $comp_name;
 	} else {
 		# built absolute path
-		my $base_root	= $self->interp->resolver->{comp_root}->[0][1];
+		my $base_root	= $self->interp->comp_root;
 		my $tbp			= $self->{template_base_path} eq 'undef' ? '' :
 										$self->{template_base_path};
 		if (File::Spec->file_name_is_absolute($comp_name)) {

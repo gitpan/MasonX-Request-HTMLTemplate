@@ -1,5 +1,10 @@
 Revision history for Perl extension MasonX::Request::HTMLTemplate
 
+00.06  (2006-07-02)
+===================
+- Removed some calling to internal Mason methods in favour to public Mason 
+  methods
+
 00.05  (2003-09-07)
 ===================
 - Add method template_arg to HTMLTemplate.pm to read a template arg
@@ -17,7 +22,7 @@ Revision history for Perl extension MasonX::Request::HTMLTemplate
 - MasonX::Request::WithApacheSession is not required anymore to use this module.
   Removed from required modules.
 
-- Fixed a bug in items method that it tried to use session also if there was no¶
+- Fixed a bug in items method that it tried to use session also if there was no
   session module available.
 
 - Test file was wrong. Created now tests for HTMLTemplate and 
